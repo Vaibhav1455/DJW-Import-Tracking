@@ -13,6 +13,8 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "DJW Import Tracking",
   description: "Import cargo lots, sales bookings, and live available-to-sell stock.",
