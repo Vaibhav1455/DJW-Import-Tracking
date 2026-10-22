@@ -162,6 +162,36 @@ function excelFields(formData: FormData) {
   };
 }
 
+function inferredStatus(
+  pipelineStatus: string,
+  fields: {
+    documentStatus?: string | null;
+    dateOfBalancePayment?: Date | string | null;
+    balanceAmountPaid?: number | null;
+    balanceAmountUsd?: number | null;
+    dutyAmountInr?: number | null;
+    dutyPaidDate?: Date | string | null;
+    beDate?: Date | string | null;
+    shippingLineBillAmount?: number | null;
+    shippingLineBillDate?: Date | string | null;
+    cfsActualWeightMt?: number | null;
+  },
+) {
+  return inferPipelineStatus({
+    pipelineStatus,
+    documentStatus: fields.documentStatus,
+    dateOfBalancePayment: fields.dateOfBalancePayment,
+    balanceAmountPaid: fields.balanceAmountPaid,
+    balanceAmountUsd: fields.balanceAmountUsd,
+    dutyAmountInr: fields.dutyAmountInr,
+    dutyPaidDate: fields.dutyPaidDate,
+    beDate: fields.beDate,
+    shippingLineBillAmount: fields.shippingLineBillAmount,
+    shippingLineBillDate: fields.shippingLineBillDate,
+    cfsActualWeightMt: fields.cfsActualWeightMt,
+  });
+}
+
 export async function createPipelineOrder(formData: FormData) {
   const lotNumber = text(formData, "lotNumber");
   const productName = text(formData, "productName");
@@ -176,9 +206,8 @@ export async function createPipelineOrder(formData: FormData) {
     throw new Error("File No. and product are required.");
   }
 
-  const resolvedStatus = inferPipelineStatus({
+  const resolvedStatus = inferredStatus(pipelineStatus, {
     ...extra,
-    pipelineStatus,
     cfsActualWeightMt,
   });
   const arrival = arrivalFields(resolvedStatus, blWeightMt, cfsActualWeightMt);
@@ -227,10 +256,16 @@ export async function updatePipelineOrder(formData: FormData) {
 
   const nextBl = blWeightMt ?? existing.blWeightMt;
   const nextCfs = cfsActualWeightMt ?? existing.cfsActualWeightMt;
-  const resolvedStatus = inferPipelineStatus({
-    ...existing,
-    ...extra,
-    pipelineStatus,
+  const resolvedStatus = inferredStatus(pipelineStatus, {
+    documentStatus: extra.documentStatus,
+    dateOfBalancePayment: extra.dateOfBalancePayment,
+    balanceAmountPaid: extra.balanceAmountPaid,
+    balanceAmountUsd: extra.balanceAmountUsd,
+    dutyAmountInr: extra.dutyAmountInr,
+    dutyPaidDate: extra.dutyPaidDate,
+    beDate: extra.beDate,
+    shippingLineBillAmount: extra.shippingLineBillAmount,
+    shippingLineBillDate: extra.shippingLineBillDate,
     cfsActualWeightMt: nextCfs,
   });
   const arrival = arrivalFields(
@@ -288,9 +323,16 @@ export async function setPipelineStage(
 
   const nextBl = blWeightMt ?? existing.blWeightMt;
   const nextCfs = cfsActualWeightMt ?? existing.cfsActualWeightMt;
-  const resolvedStatus = inferPipelineStatus({
-    ...existing,
-    pipelineStatus,
+  const resolvedStatus = inferredStatus(pipelineStatus, {
+    documentStatus: existing.documentStatus,
+    dateOfBalancePayment: existing.dateOfBalancePayment,
+    balanceAmountPaid: existing.balanceAmountPaid,
+    balanceAmountUsd: existing.balanceAmountUsd,
+    dutyAmountInr: existing.dutyAmountInr,
+    dutyPaidDate: existing.dutyPaidDate,
+    beDate: existing.beDate,
+    shippingLineBillAmount: existing.shippingLineBillAmount,
+    shippingLineBillDate: existing.shippingLineBillDate,
     cfsActualWeightMt: nextCfs,
   });
 
@@ -342,9 +384,17 @@ export async function updateDocumentStatus(
     return { error: "Pipeline order not found." };
   }
 
-  const resolvedStatus = inferPipelineStatus({
-    ...existing,
+  const resolvedStatus = inferredStatus(existing.pipelineStatus, {
     documentStatus,
+    dateOfBalancePayment: existing.dateOfBalancePayment,
+    balanceAmountPaid: existing.balanceAmountPaid,
+    balanceAmountUsd: existing.balanceAmountUsd,
+    dutyAmountInr: existing.dutyAmountInr,
+    dutyPaidDate: existing.dutyPaidDate,
+    beDate: existing.beDate,
+    shippingLineBillAmount: existing.shippingLineBillAmount,
+    shippingLineBillDate: existing.shippingLineBillDate,
+    cfsActualWeightMt: existing.cfsActualWeightMt,
   });
 
   let arrival;
