@@ -177,8 +177,8 @@ export async function createPipelineOrder(formData: FormData) {
   }
 
   const resolvedStatus = inferPipelineStatus({
-    pipelineStatus,
     ...extra,
+    pipelineStatus,
     cfsActualWeightMt,
   });
   const arrival = arrivalFields(resolvedStatus, blWeightMt, cfsActualWeightMt);
@@ -228,9 +228,9 @@ export async function updatePipelineOrder(formData: FormData) {
   const nextBl = blWeightMt ?? existing.blWeightMt;
   const nextCfs = cfsActualWeightMt ?? existing.cfsActualWeightMt;
   const resolvedStatus = inferPipelineStatus({
-    pipelineStatus,
     ...existing,
     ...extra,
+    pipelineStatus,
     cfsActualWeightMt: nextCfs,
   });
   const arrival = arrivalFields(
