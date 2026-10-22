@@ -143,6 +143,19 @@ function excelFields(formData: FormData) {
     optionalMt(formData, "balanceAmountPaid"),
     optionalMt(formData, "balanceAmountUsd"),
   );
+  const additionalFreight = pairAedUsd(
+    optionalMt(formData, "additionalFreightAmount"),
+    optionalMt(formData, "additionalFreightAmountUsd"),
+  );
+  const additionalFreightPaidDate = optionalDate(
+    formData,
+    "additionalFreightPaidDate",
+  );
+  const additionalFreightPaid =
+    text(formData, "additionalFreightPaid") === "true" ||
+    (additionalFreight.aed != null &&
+      additionalFreight.aed > 0 &&
+      Boolean(additionalFreightPaidDate));
 
   return {
     bookingNo: text(formData, "bookingNo") || null,
@@ -160,6 +173,11 @@ function excelFields(formData: FormData) {
     dateOfBalancePayment: optionalDate(formData, "dateOfBalancePayment"),
     balanceAmountPaid: balance.aed,
     balanceAmountUsd: balance.usd,
+    additionalFreightPaid,
+    additionalFreightAmount: additionalFreight.aed,
+    additionalFreightAmountUsd: additionalFreight.usd,
+    additionalFreightPaidDate,
+    additionalFreightUtr: text(formData, "additionalFreightUtr") || null,
     vesselName: text(formData, "vesselName") || null,
     shippingLine: text(formData, "shippingLine") || null,
     shipmentBillDoNumber: text(formData, "shipmentBillDoNumber") || null,
@@ -179,6 +197,10 @@ function inferredStatus(
     dateOfBalancePayment?: Date | string | null;
     balanceAmountPaid?: number | null;
     balanceAmountUsd?: number | null;
+    additionalFreightPaid?: boolean | null;
+    additionalFreightAmount?: number | null;
+    additionalFreightAmountUsd?: number | null;
+    additionalFreightPaidDate?: Date | string | null;
     dutyAmountInr?: number | null;
     dutyPaidDate?: Date | string | null;
     beDate?: Date | string | null;
@@ -189,16 +211,7 @@ function inferredStatus(
 ) {
   return inferPipelineStatus({
     pipelineStatus,
-    documentStatus: fields.documentStatus,
-    dateOfBalancePayment: fields.dateOfBalancePayment,
-    balanceAmountPaid: fields.balanceAmountPaid,
-    balanceAmountUsd: fields.balanceAmountUsd,
-    dutyAmountInr: fields.dutyAmountInr,
-    dutyPaidDate: fields.dutyPaidDate,
-    beDate: fields.beDate,
-    shippingLineBillAmount: fields.shippingLineBillAmount,
-    shippingLineBillDate: fields.shippingLineBillDate,
-    cfsActualWeightMt: fields.cfsActualWeightMt,
+    ...fields,
   });
 }
 
@@ -267,15 +280,7 @@ export async function updatePipelineOrder(formData: FormData) {
   const nextBl = blWeightMt ?? existing.blWeightMt;
   const nextCfs = cfsActualWeightMt ?? existing.cfsActualWeightMt;
   const resolvedStatus = inferredStatus(pipelineStatus, {
-    documentStatus: extra.documentStatus,
-    dateOfBalancePayment: extra.dateOfBalancePayment,
-    balanceAmountPaid: extra.balanceAmountPaid,
-    balanceAmountUsd: extra.balanceAmountUsd,
-    dutyAmountInr: extra.dutyAmountInr,
-    dutyPaidDate: extra.dutyPaidDate,
-    beDate: extra.beDate,
-    shippingLineBillAmount: extra.shippingLineBillAmount,
-    shippingLineBillDate: extra.shippingLineBillDate,
+    ...extra,
     cfsActualWeightMt: nextCfs,
   });
   const arrival = arrivalFields(
@@ -340,6 +345,10 @@ export async function setPipelineStage(
     dateOfBalancePayment: existing.dateOfBalancePayment,
     balanceAmountPaid: existing.balanceAmountPaid,
     balanceAmountUsd: existing.balanceAmountUsd,
+    additionalFreightPaid: existing.additionalFreightPaid,
+    additionalFreightAmount: existing.additionalFreightAmount,
+    additionalFreightAmountUsd: existing.additionalFreightAmountUsd,
+    additionalFreightPaidDate: existing.additionalFreightPaidDate,
     dutyAmountInr: existing.dutyAmountInr,
     dutyPaidDate: existing.dutyPaidDate,
     beDate: existing.beDate,
@@ -403,6 +412,10 @@ export async function updateDocumentStatus(
     dateOfBalancePayment: existing.dateOfBalancePayment,
     balanceAmountPaid: existing.balanceAmountPaid,
     balanceAmountUsd: existing.balanceAmountUsd,
+    additionalFreightPaid: existing.additionalFreightPaid,
+    additionalFreightAmount: existing.additionalFreightAmount,
+    additionalFreightAmountUsd: existing.additionalFreightAmountUsd,
+    additionalFreightPaidDate: existing.additionalFreightPaidDate,
     dutyAmountInr: existing.dutyAmountInr,
     dutyPaidDate: existing.dutyPaidDate,
     beDate: existing.beDate,

@@ -25,6 +25,10 @@ textarea {
   @apply w-full rounded-xl border border-ink-100 bg-white px-3.5 py-2.5 text-sm text-ink-800 outline-none transition placeholder:text-ink-700/40 focus:border-copper-500 focus:ring-2 focus:ring-copper-500/20;
 }
 
+input[type="checkbox"] {
+  @apply h-4 w-4 max-w-4 shrink-0 rounded border-ink-100 p-0 accent-ink-800;
+}
+
 label {
   @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-ink-700/70;
 }

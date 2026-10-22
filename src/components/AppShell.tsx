@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <p className="px-6 py-5 text-xs text-paper-50/40">
-          Stage 6 sends CFS weight into live stock.
+          Stage 7 sends CFS weight into live stock.
         </p>
       </aside>
 

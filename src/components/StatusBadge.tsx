@@ -32,6 +32,7 @@ export function LiftingBadge({ status }: { status: string }) {
 const pipelineStyles: Record<string, string> = {
   ADVANCE_PAID: "bg-sky-100 text-sky-900",
   BALANCE_PAID: "bg-indigo-100 text-indigo-900",
+  ADDITIONAL_FREIGHT_PAID: "bg-cyan-100 text-cyan-900",
   CUSTOMS_DOCUMENTS_RECEIVED: "bg-violet-100 text-violet-900",
   DUTY_PAID: "bg-amber-100 text-amber-900",
   SHIPPING_LINE_BILL_PAID: "bg-orange-100 text-orange-900",

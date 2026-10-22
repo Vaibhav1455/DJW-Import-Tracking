@@ -7,7 +7,7 @@ import { PipelineBadge } from "@/components/StatusBadge";
 import { ShortagePair } from "@/components/WeightShortageAlert";
 import { deleteLot } from "@/lib/actions";
 import { IN_ACTIVE_SALES_STOCK, LOT_STAGE } from "@/lib/constants";
-import { formatMt } from "@/lib/format";
+import { formatDate, formatMoney, formatMt } from "@/lib/format";
 import { getLotWithStock } from "@/lib/queries";
 import { computeDeliveryShortage, computeWeightShortage } from "@/lib/weights";
 
@@ -37,7 +37,7 @@ export default async function PipelineDetailPage({
       <PageHeader
         kicker={order.portLocation || "Import file"}
         title={order.lotNumber}
-        description={`${order.productName}. Stage 6 moves CFS Quantity Received into Active CFS stock.`}
+        description={`${order.productName}. Stage 7 moves CFS Quantity Received into Active CFS stock.`}
       />
 
       <div className="mb-4 flex items-center gap-3">
@@ -69,6 +69,31 @@ export default async function PipelineDetailPage({
             order.deliveryQuantityMt != null
               ? formatMt(order.deliveryQuantityMt)
               : "—"
+          }
+        />
+        <StatCard
+          label="Additional freight"
+          value={order.additionalFreightPaid ? "Paid" : "Pending"}
+        />
+        <StatCard
+          label="Additional freight amount"
+          value={
+            order.additionalFreightAmount != null
+              ? formatMoney(order.additionalFreightAmount, "AED")
+              : "—"
+          }
+        />
+        <StatCard
+          label="UTR / payment date"
+          value={
+            [
+              order.additionalFreightUtr,
+              order.additionalFreightPaidDate
+                ? formatDate(order.additionalFreightPaidDate)
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "—"
           }
         />
       </div>

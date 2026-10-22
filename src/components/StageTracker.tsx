@@ -30,7 +30,7 @@ export function StageTracker({
             type="button"
             disabled={disabled || pending}
             onClick={() => onSelect(stage.value)}
-            className={`flex min-w-[7.5rem] flex-1 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition sm:min-w-0 ${
+            className={`flex min-w-[6.25rem] flex-1 items-center gap-2 rounded-xl border px-2 py-2 text-left transition sm:min-w-0 ${
               active
                 ? "border-ink-800 bg-ink-800 text-white"
                 : done

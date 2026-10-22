@@ -86,9 +86,9 @@ export function PipelineFileCard({ order }: { order: CargoLot }) {
           onSelect={selectStage}
         />
         <p className="mt-2 text-xs text-ink-700/50">
-          Balance, duty, or shipping-line bill (amount + date) advances the
-          matching stage on save. CFS quantity automatically marks Cargo Arrived
-          at CFS.
+          Balance, additional freight, duty, or shipping-line bill (amount +
+          date) advances the matching stage on save. CFS quantity automatically
+          marks Cargo Arrived at CFS.
         </p>
       </div>
 

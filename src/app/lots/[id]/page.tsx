@@ -92,7 +92,7 @@ export default async function LotDetailPage({
           </div>
         </div>
         <p className="mb-3 text-sm text-ink-700/65">
-          Live sales stock uses CFS Quantity Received from stage 6.
+          Live sales stock uses CFS Quantity Received from stage 7.
         </p>
         <ShortagePair cfs={cfsCheck} delivery={deliveryCheck} />
       </section>

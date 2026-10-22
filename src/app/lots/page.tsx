@@ -18,7 +18,7 @@ export default async function LotsPage() {
       <PageHeader
         kicker="Sales import"
         title="Active CFS stock"
-        description="Sales booking inventory after stage 6. Initial stock is CFS Quantity Received."
+        description="Sales booking inventory after stage 7. Initial stock is CFS Quantity Received."
         actionHref="/lots/new"
         actionLabel="New lot"
       />

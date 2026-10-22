@@ -171,6 +171,51 @@ export function PricingFields({
           defaultUsd={order?.balanceAmountUsd}
         />
       </Section>
+
+      <Section title="Additional Balance / Freight Payment">
+        <label className="flex items-center gap-3 rounded-xl border border-ink-100 bg-white px-3.5 py-3 sm:col-span-2">
+          <input
+            type="checkbox"
+            name="additionalFreightPaid"
+            value="true"
+            defaultChecked={Boolean(order?.additionalFreightPaid)}
+          />
+          <span className="text-sm font-medium text-ink-800">
+            Additional balance / freight paid
+          </span>
+        </label>
+        <Field
+          label="Payment date"
+          htmlFor={`${prefix}additionalFreightPaidDate`}
+        >
+          <input
+            id={`${prefix}additionalFreightPaidDate`}
+            name="additionalFreightPaidDate"
+            type="date"
+            defaultValue={isoDateInput(order?.additionalFreightPaidDate)}
+          />
+        </Field>
+        <Field
+          label="UTR / reference"
+          htmlFor={`${prefix}additionalFreightUtr`}
+        >
+          <input
+            id={`${prefix}additionalFreightUtr`}
+            name="additionalFreightUtr"
+            defaultValue={order?.additionalFreightUtr ?? ""}
+            placeholder="UTR / bank reference"
+          />
+        </Field>
+        <AedUsdPair
+          prefix={prefix}
+          aedName="additionalFreightAmount"
+          usdName="additionalFreightAmountUsd"
+          aedLabel="Additional amount (AED)"
+          usdLabel="Additional amount (USD)"
+          defaultAed={order?.additionalFreightAmount}
+          defaultUsd={order?.additionalFreightAmountUsd}
+        />
+      </Section>
     </>
   );
 }

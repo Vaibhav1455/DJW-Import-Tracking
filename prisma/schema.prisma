@@ -27,6 +27,11 @@ model CargoLot {
   dateOfBalancePayment   DateTime?
   balanceAmountPaid      Float?
   balanceAmountUsd       Float?
+  additionalFreightPaid      Boolean        @default(false)
+  additionalFreightAmount    Float?
+  additionalFreightAmountUsd Float?
+  additionalFreightPaidDate  DateTime?
+  additionalFreightUtr       String?
   totalInitialInwardMt   Float          @default(0)
   stage                  String         @default("ACTIVE")
   pipelineStatus         String         @default("ADVANCE_PAID")

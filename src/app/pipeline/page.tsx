@@ -10,7 +10,7 @@ export default async function PipelinePage() {
       <PageHeader
         kicker="Pre-CFS"
         title="Import pipeline"
-        description="Deep Jyoti import file board. Stage 6 posts CFS Quantity Received into Active CFS stock."
+        description="Deep Jyoti import file board. Stage 7 posts CFS Quantity Received into Active CFS stock."
         actionHref="/pipeline/new"
         actionLabel="New file"
       />
@@ -28,7 +28,7 @@ export default async function PipelinePage() {
         ))}
         {orders.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-ink-100 p-8 text-sm text-ink-700/60">
-            No open import files. Create a file, then tap stage 6 when cargo
+            No open import files. Create a file, then tap stage 7 when cargo
             arrives at CFS.
           </p>
         ) : null}

@@ -212,9 +212,9 @@ export function PipelineForm({
       </fieldset>
 
       <p className="text-xs text-ink-700/50">
-        Saving with balance, duty, or shipping-line bill amount and date sets
-        that pipeline stage. A filled CFS quantity sets Cargo Arrived at CFS
-        and moves the lot into Active CFS stock.
+        Saving with balance, additional freight, duty, or shipping-line bill
+        amount and date sets that pipeline stage. A filled CFS quantity sets
+        Cargo Arrived at CFS and moves the lot into Active CFS stock.
       </p>
       <button
         type="submit"

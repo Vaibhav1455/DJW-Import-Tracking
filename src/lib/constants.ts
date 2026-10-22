@@ -22,10 +22,16 @@ export const COMMITTED_STATUSES: LiftingStatus[] = [
 export const PIPELINE_STATUSES = [
   { value: "ADVANCE_PAID", step: 1, name: "Advance Paid", label: "1. Advance Paid" },
   { value: "BALANCE_PAID", step: 2, name: "Balance Paid", label: "2. Balance Paid" },
-  { value: "CUSTOMS_DOCUMENTS_RECEIVED", step: 3, name: "Customs Docs Received", label: "3. Customs Documents Received" },
-  { value: "DUTY_PAID", step: 4, name: "Duty Paid", label: "4. Duty Paid" },
-  { value: "SHIPPING_LINE_BILL_PAID", step: 5, name: "Shipping Line Bill Paid", label: "5. Shipping Line Bill Paid" },
-  { value: "CARGO_ARRIVED_AT_CFS", step: 6, name: "Cargo Arrived at CFS", label: "6. Cargo Arrived at CFS" },
+  {
+    value: "ADDITIONAL_FREIGHT_PAID",
+    step: 3,
+    name: "Addl. Freight",
+    label: "3. Additional Balance / Freight Payment",
+  },
+  { value: "CUSTOMS_DOCUMENTS_RECEIVED", step: 4, name: "Customs Docs Received", label: "4. Customs Documents Received" },
+  { value: "DUTY_PAID", step: 5, name: "Duty Paid", label: "5. Duty Paid" },
+  { value: "SHIPPING_LINE_BILL_PAID", step: 6, name: "Shipping Line Bill Paid", label: "6. Shipping Line Bill Paid" },
+  { value: "CARGO_ARRIVED_AT_CFS", step: 7, name: "Cargo Arrived at CFS", label: "7. Cargo Arrived at CFS" },
 ] as const;
 
 export const IN_ACTIVE_SALES_STOCK = "IN_ACTIVE_SALES_STOCK";
@@ -101,6 +107,10 @@ export function inferPipelineStatus(input: {
   dateOfBalancePayment?: Date | string | null;
   balanceAmountPaid?: number | null;
   balanceAmountUsd?: number | null;
+  additionalFreightPaid?: boolean | null;
+  additionalFreightAmount?: number | null;
+  additionalFreightAmountUsd?: number | null;
+  additionalFreightPaidDate?: Date | string | null;
   dutyAmountInr?: number | null;
   dutyPaidDate?: Date | string | null;
   beDate?: Date | string | null;
@@ -119,8 +129,17 @@ export function inferPipelineStatus(input: {
   ) {
     rank = Math.max(rank, 1);
   }
-  if (input.documentStatus === "RECEIVED") {
+  if (
+    input.additionalFreightPaid ||
+    hasAmountAndDate(
+      input.additionalFreightAmount ?? input.additionalFreightAmountUsd,
+      input.additionalFreightPaidDate,
+    )
+  ) {
     rank = Math.max(rank, 2);
+  }
+  if (input.documentStatus === "RECEIVED") {
+    rank = Math.max(rank, 3);
   }
   if (
     hasAmountAndDate(
@@ -128,7 +147,7 @@ export function inferPipelineStatus(input: {
       input.dutyPaidDate ?? input.beDate,
     )
   ) {
-    rank = Math.max(rank, 3);
+    rank = Math.max(rank, 4);
   }
   if (
     hasAmountAndDate(
@@ -136,10 +155,10 @@ export function inferPipelineStatus(input: {
       input.shippingLineBillDate,
     )
   ) {
-    rank = Math.max(rank, 4);
+    rank = Math.max(rank, 5);
   }
   if (input.cfsActualWeightMt != null && input.cfsActualWeightMt > 0) {
-    rank = Math.max(rank, 5);
+    rank = Math.max(rank, 6);
   }
 
   return PIPELINE_STATUSES[rank]?.value ?? "ADVANCE_PAID";
