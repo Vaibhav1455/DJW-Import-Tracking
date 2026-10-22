@@ -49,6 +49,17 @@ export function formatDate(value: Date | string) {
   });
 }
 
+export function formatDateTime(value: Date | string | null | undefined) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function invoiceAmount(
   rateInrPerMt: number,
   qtyBookedMt: number,

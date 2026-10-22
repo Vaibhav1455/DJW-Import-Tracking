@@ -5,17 +5,28 @@ import { useEffect, useState, useTransition } from "react";
 
 export function ConfirmDeleteButton({
   message,
+  confirmMessage,
   action,
   redirectTo,
   label = "Delete",
+  confirmLabel = "Move to Recycle Bin",
+  pendingLabel = "Moving…",
+  requireDoubleConfirm = false,
+  variant = "icon",
 }: {
   message: string;
+  confirmMessage?: string;
   action: () => Promise<void>;
   redirectTo?: string;
   label?: string;
+  confirmLabel?: string;
+  pendingLabel?: string;
+  requireDoubleConfirm?: boolean;
+  variant?: "icon" | "text";
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -28,12 +39,25 @@ export function ConfirmDeleteButton({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, pending]);
 
+  function close() {
+    if (pending) return;
+    setOpen(false);
+    setStep(1);
+    setError(null);
+  }
+
   function confirm() {
+    if (requireDoubleConfirm && step === 1) {
+      setStep(2);
+      setError(null);
+      return;
+    }
     setError(null);
     startTransition(async () => {
       try {
         await action();
         setOpen(false);
+        setStep(1);
         if (redirectTo) {
           router.push(redirectTo);
         }
@@ -48,6 +72,13 @@ export function ConfirmDeleteButton({
     });
   }
 
+  const dialogMessage =
+    requireDoubleConfirm && step === 2 && confirmMessage
+      ? confirmMessage
+      : message;
+  const actionLabel =
+    requireDoubleConfirm && step === 1 ? "Continue" : confirmLabel;
+
   return (
     <>
       <button
@@ -56,19 +87,23 @@ export function ConfirmDeleteButton({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          setStep(1);
+          setError(null);
           setOpen(true);
         }}
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        className={
+          variant === "text"
+            ? "rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100"
+            : "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        }
       >
-        <TrashIcon />
+        {variant === "text" ? label : <TrashIcon />}
       </button>
 
       {open ? (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/40 p-4 sm:items-center"
-          onClick={() => {
-            if (!pending) setOpen(false);
-          }}
+          onClick={close}
         >
           <div
             role="dialog"
@@ -76,7 +111,7 @@ export function ConfirmDeleteButton({
             className="w-full max-w-md rounded-2xl border border-ink-100 bg-white p-5 shadow-card"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="text-sm leading-6 text-ink-800">{message}</p>
+            <p className="text-sm leading-6 text-ink-800">{dialogMessage}</p>
             {error ? (
               <p className="mt-3 text-sm font-medium text-rose-700">{error}</p>
             ) : null}
@@ -84,7 +119,7 @@ export function ConfirmDeleteButton({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => setOpen(false)}
+                onClick={close}
                 className="rounded-xl border border-ink-100 px-4 py-2.5 text-sm font-semibold"
               >
                 Cancel
@@ -95,7 +130,7 @@ export function ConfirmDeleteButton({
                 onClick={confirm}
                 className="rounded-xl bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-800 disabled:opacity-60"
               >
-                {pending ? "Deleting…" : "Yes, Delete Permanently"}
+                {pending ? pendingLabel : actionLabel}
               </button>
             </div>
           </div>

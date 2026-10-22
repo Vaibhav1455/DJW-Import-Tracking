@@ -9,6 +9,7 @@ const links = [
   { href: "/pipeline", label: "Pipeline" },
   { href: "/lots", label: "CFS stock" },
   { href: "/bookings", label: "Sales" },
+  { href: "/recycle", label: "Recycle Bin" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

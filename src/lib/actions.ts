@@ -41,6 +41,16 @@ function revalidateAll() {
   revalidatePath("/lots");
   revalidatePath("/bookings");
   revalidatePath("/pipeline");
+  revalidatePath("/recycle");
+}
+
+const live = { isDeleted: false };
+
+function liveLotInclude() {
+  return {
+    where: live,
+    include: { bookings: { where: live } },
+  } as const;
 }
 
 function optionalMt(formData: FormData, key: string) {
@@ -248,9 +258,9 @@ export async function updatePipelineOrder(formData: FormData) {
     throw new Error("File No. and product are required.");
   }
 
-  const existing = await prisma.cargoLot.findUnique({
-    where: { id },
-    include: { bookings: true },
+  const existing = await prisma.cargoLot.findFirst({
+    ...liveLotInclude(),
+    where: { id, ...live },
   });
   if (!existing) throw new Error("Pipeline order not found.");
 
@@ -316,7 +326,9 @@ export async function setPipelineStage(
   cfsActualWeightMt: number | null,
   deliveryQuantityMt: number | null,
 ): Promise<{ error?: string }> {
-  const existing = await prisma.cargoLot.findUnique({ where: { id } });
+  const existing = await prisma.cargoLot.findFirst({
+    where: { id, ...live },
+  });
   if (!existing) {
     return { error: "Pipeline order not found." };
   }
@@ -379,7 +391,9 @@ export async function updateDocumentStatus(
     return { error: "Document status must be Pending or Received." };
   }
 
-  const existing = await prisma.cargoLot.findUnique({ where: { id } });
+  const existing = await prisma.cargoLot.findFirst({
+    where: { id, ...live },
+  });
   if (!existing) {
     return { error: "Pipeline order not found." };
   }
@@ -482,9 +496,9 @@ export async function updateLot(formData: FormData) {
     throw new Error("All required lot fields must be filled.");
   }
 
-  const lot = await prisma.cargoLot.findUnique({
-    where: { id },
-    include: { bookings: true },
+  const lot = await prisma.cargoLot.findFirst({
+    ...liveLotInclude(),
+    where: { id, ...live },
   });
   if (!lot) throw new Error("Lot not found.");
 
@@ -538,9 +552,9 @@ export async function createBooking(formData: FormData) {
     throw new Error("Actual loaded weight is required when status is Lifted.");
   }
 
-  const lot = await prisma.cargoLot.findUnique({
-    where: { id: lotId },
-    include: { bookings: true },
+  const lot = await prisma.cargoLot.findFirst({
+    ...liveLotInclude(),
+    where: { id: lotId, ...live },
   });
   if (!lot) throw new Error("Selected lot was not found.");
   if (lot.stage !== LOT_STAGE.ACTIVE) {
@@ -594,9 +608,14 @@ export async function updateBooking(formData: FormData) {
     throw new Error("Actual loaded weight is required when status is Lifted.");
   }
 
-  const lot = await prisma.cargoLot.findUnique({
-    where: { id: lotId },
-    include: { bookings: true },
+  const booking = await prisma.salesBooking.findFirst({
+    where: { id, ...live },
+  });
+  if (!booking) throw new Error("Sale booking not found.");
+
+  const lot = await prisma.cargoLot.findFirst({
+    ...liveLotInclude(),
+    where: { id: lotId, ...live },
   });
   if (!lot) throw new Error("Selected lot was not found.");
   if (lot.stage !== LOT_STAGE.ACTIVE) {
@@ -633,10 +652,97 @@ export async function updateBooking(formData: FormData) {
   redirect(`/bookings/${id}`);
 }
 
+function markDeleted() {
+  return { isDeleted: true, deletedAt: new Date() };
+}
+
+function markRestored() {
+  return { isDeleted: false, deletedAt: null as Date | null };
+}
+
 export async function deleteLot(id: string) {
-  const lot = await prisma.cargoLot.findUnique({ where: { id } });
+  const lot = await prisma.cargoLot.findFirst({
+    where: { id, isDeleted: false },
+  });
   if (!lot) {
     throw new Error("Import lot not found.");
+  }
+
+  await prisma.cargoLot.update({
+    where: { id },
+    data: markDeleted(),
+  });
+
+  revalidateAll();
+  revalidatePath("/recycle");
+}
+
+export async function deleteBooking(id: string) {
+  const booking = await prisma.salesBooking.findFirst({
+    where: { id, isDeleted: false },
+  });
+  if (!booking) {
+    throw new Error("Sale booking not found.");
+  }
+
+  await prisma.salesBooking.update({
+    where: { id },
+    data: markDeleted(),
+  });
+
+  revalidateAll();
+  revalidatePath(`/lots/${booking.lotId}`);
+  revalidatePath(`/bookings/${id}`);
+  revalidatePath("/recycle");
+}
+
+export async function restoreLot(id: string) {
+  const lot = await prisma.cargoLot.findFirst({
+    where: { id, isDeleted: true },
+  });
+  if (!lot) {
+    throw new Error("Deleted import lot not found.");
+  }
+
+  await prisma.cargoLot.update({
+    where: { id },
+    data: markRestored(),
+  });
+
+  revalidateAll();
+  revalidatePath("/recycle");
+}
+
+export async function restoreBooking(id: string) {
+  const booking = await prisma.salesBooking.findFirst({
+    where: { id, isDeleted: true },
+    include: { lot: true },
+  });
+  if (!booking) {
+    throw new Error("Deleted sale booking not found.");
+  }
+  if (booking.lot.isDeleted) {
+    throw new Error(
+      "Restore the import lot first before restoring this sale booking.",
+    );
+  }
+
+  await prisma.salesBooking.update({
+    where: { id },
+    data: markRestored(),
+  });
+
+  revalidateAll();
+  revalidatePath(`/lots/${booking.lotId}`);
+  revalidatePath("/recycle");
+}
+
+export async function permanentlyDeleteLot(id: string) {
+  const lot = await prisma.cargoLot.findFirst({
+    where: { id, isDeleted: true },
+  });
+  if (!lot) {
+    throw new Error("Deleted import lot not found.");
   }
 
   await prisma.$transaction([
@@ -645,12 +751,15 @@ export async function deleteLot(id: string) {
   ]);
 
   revalidateAll();
+  revalidatePath("/recycle");
 }
 
-export async function deleteBooking(id: string) {
-  const booking = await prisma.salesBooking.findUnique({ where: { id } });
+export async function permanentlyDeleteBooking(id: string) {
+  const booking = await prisma.salesBooking.findFirst({
+    where: { id, isDeleted: true },
+  });
   if (!booking) {
-    throw new Error("Sale booking not found.");
+    throw new Error("Deleted sale booking not found.");
   }
 
   const lotId = booking.lotId;
@@ -658,5 +767,5 @@ export async function deleteBooking(id: string) {
 
   revalidateAll();
   revalidatePath(`/lots/${lotId}`);
-  revalidatePath(`/bookings/${id}`);
+  revalidatePath("/recycle");
 }

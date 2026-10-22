@@ -8,7 +8,7 @@ import { getLotsWithStock } from "@/lib/queries";
 import { computeDeliveryShortage, computeWeightShortage } from "@/lib/weights";
 
 const LOT_DELETE_MESSAGE =
-  "Are you sure you want to permanently delete this import lot? This action cannot be undone.";
+  "Move this import lot to the Recycle Bin? It will leave pipeline, CFS stock, and Available-to-Sell until you restore it.";
 
 export default async function LotsPage() {
   const lots = await getLotsWithStock();

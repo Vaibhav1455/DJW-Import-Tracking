@@ -1,6 +1,7 @@
 "use client";
 
-import { setPipelineStage } from "@/lib/actions";
+import { deleteLot, setPipelineStage } from "@/lib/actions";
+import { ConfirmDeleteButton } from "./ConfirmDeleteButton";
 import { type PipelineStatus } from "@/lib/constants";
 import { fileQuantityMt, formatMt } from "@/lib/format";
 import {
@@ -140,13 +141,20 @@ export function PipelineFileCard({ order }: { order: CargoLot }) {
         <p className="mt-3 text-sm font-medium text-rose-700">{error}</p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="mt-4 text-sm font-semibold text-ink-700/70 hover:text-ink-800"
-      >
-        {open ? "Hide details" : "Details / Edit"}
-      </button>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="text-sm font-semibold text-ink-700/70 hover:text-ink-800"
+        >
+          {open ? "Hide details" : "Details / Edit"}
+        </button>
+        <ConfirmDeleteButton
+          label={`Delete file ${order.lotNumber}`}
+          message="Move this import lot to the Recycle Bin? It will leave pipeline, CFS stock, and Available-to-Sell until you restore it."
+          action={deleteLot.bind(null, order.id)}
+        />
+      </div>
 
       {open ? (
         <div className="mt-4 border-t border-ink-100 pt-4">

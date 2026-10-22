@@ -44,9 +44,13 @@ model CargoLot {
   shippingLineBillDate   DateTime?
   arrivedAtCfsAt         DateTime?
   notes                  String?
+  isDeleted              Boolean        @default(false)
+  deletedAt              DateTime?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
   bookings               SalesBooking[]
+
+  @@index([isDeleted])
 }
 
 model SalesBooking {
@@ -62,9 +66,12 @@ model SalesBooking {
   paymentStatus        String   @default("PENDING")
   bookingDate          DateTime @default(now())
   notes                String?
+  isDeleted            Boolean  @default(false)
+  deletedAt            DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
   @@index([lotId])
   @@index([liftingStatus])
+  @@index([isDeleted])
 }

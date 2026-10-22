@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { PageHeader } from "@/components/PageHeader";
 import { PipelineForm } from "@/components/PipelineForm";
 import { StatCard } from "@/components/StatCard";
 import { PipelineBadge } from "@/components/StatusBadge";
 import { ShortagePair } from "@/components/WeightShortageAlert";
+import { deleteLot } from "@/lib/actions";
 import { IN_ACTIVE_SALES_STOCK, LOT_STAGE } from "@/lib/constants";
 import { formatMt } from "@/lib/format";
 import { getLotWithStock } from "@/lib/queries";
@@ -38,8 +40,14 @@ export default async function PipelineDetailPage({
         description={`${order.productName}. Stage 6 moves CFS Quantity Received into Active CFS stock.`}
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <PipelineBadge status={order.pipelineStatus} />
+        <ConfirmDeleteButton
+          label={`Delete file ${order.lotNumber}`}
+          message="Move this import lot to the Recycle Bin? It will leave pipeline, CFS stock, and Available-to-Sell until you restore it."
+          action={deleteLot.bind(null, order.id)}
+          redirectTo="/pipeline"
+        />
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

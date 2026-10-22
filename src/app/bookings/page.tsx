@@ -7,7 +7,7 @@ import { formatInr, formatMt, invoiceAmount } from "@/lib/format";
 import { getBookings } from "@/lib/queries";
 
 const BOOKING_DELETE_MESSAGE =
-  "Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell.";
+  "Move this sale booking to the Recycle Bin? Allocated stock will return to Available-to-Sell until you restore it.";
 
 export default async function BookingsPage() {
   const bookings = await getBookings();

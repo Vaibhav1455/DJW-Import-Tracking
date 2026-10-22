@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                 <div className="flex items-center pr-3">
                   <ConfirmDeleteButton
                     label={`Delete lot ${lot.lotNumber}`}
-                    message="Are you sure you want to permanently delete this import lot? This action cannot be undone."
+                    message="Move this import lot to the Recycle Bin? It will leave pipeline, CFS stock, and Available-to-Sell until you restore it."
                     action={deleteLot.bind(null, lot.id)}
                   />
                 </div>
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
               <div className="flex items-center pr-3">
                 <ConfirmDeleteButton
                   label={`Delete booking for ${booking.buyerName}`}
-                  message="Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell."
+                  message="Move this sale booking to the Recycle Bin? Allocated stock will return to Available-to-Sell until you restore it."
                   action={deleteBooking.bind(null, booking.id)}
                 />
               </div>

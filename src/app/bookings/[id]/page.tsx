@@ -55,7 +55,7 @@ export default async function BookingDetailPage({
       <div className="mb-6">
         <ConfirmDeleteButton
           label={`Delete booking for ${booking.buyerName}`}
-          message="Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell."
+          message="Move this sale booking to the Recycle Bin? Allocated stock will return to Available-to-Sell until you restore it."
           action={deleteBooking.bind(null, booking.id)}
           redirectTo="/bookings"
         />
