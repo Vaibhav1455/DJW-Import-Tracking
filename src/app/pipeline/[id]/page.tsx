@@ -1,0 +1,76 @@
+import { notFound, redirect } from "next/navigation";
+import { PageHeader } from "@/components/PageHeader";
+import { PipelineForm } from "@/components/PipelineForm";
+import { StatCard } from "@/components/StatCard";
+import { PipelineBadge } from "@/components/StatusBadge";
+import { ShortagePair } from "@/components/WeightShortageAlert";
+import { IN_ACTIVE_SALES_STOCK, LOT_STAGE } from "@/lib/constants";
+import { formatMt } from "@/lib/format";
+import { getLotWithStock } from "@/lib/queries";
+import { computeDeliveryShortage, computeWeightShortage } from "@/lib/weights";
+
+export default async function PipelineDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const order = await getLotWithStock(id);
+  if (!order) notFound();
+  if (
+    order.stage === LOT_STAGE.ACTIVE ||
+    order.pipelineStatus === IN_ACTIVE_SALES_STOCK
+  ) {
+    redirect(`/lots/${id}`);
+  }
+
+  const cfsCheck = computeWeightShortage(order.blWeightMt, order.cfsActualWeightMt);
+  const deliveryCheck = computeDeliveryShortage(
+    order.blWeightMt,
+    order.deliveryQuantityMt,
+  );
+
+  return (
+    <div>
+      <PageHeader
+        kicker={order.portLocation || "Import file"}
+        title={order.lotNumber}
+        description={`${order.productName}. Stage 6 moves CFS Quantity Received into Active CFS stock.`}
+      />
+
+      <div className="mb-4">
+        <PipelineBadge status={order.pipelineStatus} />
+      </div>
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <StatCard
+          label="Quantity as per BL"
+          value={order.blWeightMt != null ? formatMt(order.blWeightMt) : "—"}
+        />
+        <StatCard
+          label="CFS Quantity Received"
+          value={
+            order.cfsActualWeightMt != null
+              ? formatMt(order.cfsActualWeightMt)
+              : "—"
+          }
+        />
+        <StatCard
+          label="Delivery Quantity Received"
+          value={
+            order.deliveryQuantityMt != null
+              ? formatMt(order.deliveryQuantityMt)
+              : "—"
+          }
+        />
+      </div>
+
+      <div className="mb-8 rounded-2xl border border-ink-100 bg-white p-5 shadow-card">
+        <ShortagePair cfs={cfsCheck} delivery={deliveryCheck} />
+      </div>
+
+      <h2 className="mb-4 font-display text-2xl">Edit import file</h2>
+      <PipelineForm order={order} />
+    </div>
+  );
+}

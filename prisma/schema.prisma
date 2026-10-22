@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model CargoLot {
+  id                     String         @id @default(cuid())
+  lotNumber              String         @unique
+  bookingNo              String?
+  piNo                   String?
+  productName            String
+  supplierName           String         @default("")
+  portLocation           String         @default("")
+  quantityMt             Float?
+  rateAed                Float?
+  rateUsd                Float?
+  freightTerms           String?
+  dateOfAdvance          DateTime?
+  advanceAmountPaid      Float?
+  advanceAmountUsd       Float?
+  documentStatus         String         @default("PENDING")
+  dateOfBalancePayment   DateTime?
+  balanceAmountPaid      Float?
+  balanceAmountUsd       Float?
+  totalInitialInwardMt   Float          @default(0)
+  stage                  String         @default("ACTIVE")
+  pipelineStatus         String         @default("ADVANCE_PAID")
+  blWeightMt             Float?
+  cfsActualWeightMt      Float?
+  deliveryQuantityMt     Float?
+  vesselName             String?
+  shippingLine           String?
+  shipmentBillDoNumber   String?
+  beNumber               String?
+  beDate                 DateTime?
+  dutyAmountInr          Float?
+  dutyPaidDate           DateTime?
+  shippingLineBillAmount Float?
+  shippingLineBillDate   DateTime?
+  arrivedAtCfsAt         DateTime?
+  notes                  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  bookings               SalesBooking[]
+}
+
+model SalesBooking {
+  id                   String   @id @default(cuid())
+  lotId                String
+  lot                  CargoLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  buyerName            String
+  agreedRateInrPerMt   Float
+  qtyBookedMt          Float
+  vehicleNumber        String?
+  actualLoadedWeightMt Float?
+  liftingStatus        String   @default("ORDER_CONFIRMED")
+  paymentStatus        String   @default("PENDING")
+  bookingDate          DateTime @default(now())
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([lotId])
+  @@index([liftingStatus])
+}

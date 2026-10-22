@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-paper-50 text-ink-800 antialiased;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+input,
+select,
+textarea {
+  @apply w-full rounded-xl border border-ink-100 bg-white px-3.5 py-2.5 text-sm text-ink-800 outline-none transition placeholder:text-ink-700/40 focus:border-copper-500 focus:ring-2 focus:ring-copper-500/20;
+}
+
+label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-ink-700/70;
+}
+
+textarea {
+  @apply min-h-[96px] resize-y;
+}
