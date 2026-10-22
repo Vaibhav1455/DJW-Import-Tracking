@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { PageHeader } from "@/components/PageHeader";
 import { LiftingBadge, PaymentBadge } from "@/components/StatusBadge";
+import { deleteBooking } from "@/lib/actions";
 import { formatInr, formatMt, invoiceAmount } from "@/lib/format";
 import { getBookings } from "@/lib/queries";
+
+const BOOKING_DELETE_MESSAGE =
+  "Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell.";
 
 export default async function BookingsPage() {
   const bookings = await getBookings();
@@ -32,37 +37,48 @@ export default async function BookingsPage() {
             booking.actualLoadedWeightMt,
           );
           return (
-            <Link
+            <div
               key={booking.id}
-              href={`/bookings/${booking.id}`}
-              className="grid gap-2 border-t border-ink-100 px-4 py-4 hover:bg-paper-50 lg:grid-cols-12 lg:items-center"
+              className="flex items-stretch border-t border-ink-100"
             >
-              <div className="lg:col-span-3">
-                <p className="font-semibold">{booking.buyerName}</p>
-                <p className="text-sm text-ink-700/65">
-                  {booking.lot.lotNumber} · {booking.lot.productName}
+              <Link
+                href={`/bookings/${booking.id}`}
+                className="grid min-w-0 flex-1 gap-2 px-4 py-4 hover:bg-paper-50 lg:grid-cols-12 lg:items-center"
+              >
+                <div className="lg:col-span-3">
+                  <p className="font-semibold">{booking.buyerName}</p>
+                  <p className="text-sm text-ink-700/65">
+                    {booking.lot.lotNumber} · {booking.lot.productName}
+                  </p>
+                </div>
+                <p className="text-sm lg:col-span-2">
+                  {booking.vehicleNumber || "Vehicle pending"}
                 </p>
-              </div>
-              <p className="text-sm lg:col-span-2">
-                {booking.vehicleNumber || "Vehicle pending"}
-              </p>
-              <p className="tabular text-sm lg:col-span-2 lg:text-right">
-                {formatMt(booking.qtyBookedMt)}
-                {booking.actualLoadedWeightMt
-                  ? ` / ${formatMt(booking.actualLoadedWeightMt)}`
-                  : ""}
-              </p>
-              <div className="flex flex-wrap gap-2 lg:col-span-2">
-                <LiftingBadge status={booking.liftingStatus} />
-                <PaymentBadge status={booking.paymentStatus} />
-              </div>
-              <div className="lg:col-span-3 lg:text-right">
-                <p className="tabular font-semibold">{formatInr(invoice)}</p>
-                <p className="text-xs text-ink-700/55">
-                  {formatInr(booking.agreedRateInrPerMt)} / MT
+                <p className="tabular text-sm lg:col-span-2 lg:text-right">
+                  {formatMt(booking.qtyBookedMt)}
+                  {booking.actualLoadedWeightMt
+                    ? ` / ${formatMt(booking.actualLoadedWeightMt)}`
+                    : ""}
                 </p>
+                <div className="flex flex-wrap gap-2 lg:col-span-2">
+                  <LiftingBadge status={booking.liftingStatus} />
+                  <PaymentBadge status={booking.paymentStatus} />
+                </div>
+                <div className="lg:col-span-3 lg:text-right">
+                  <p className="tabular font-semibold">{formatInr(invoice)}</p>
+                  <p className="text-xs text-ink-700/55">
+                    {formatInr(booking.agreedRateInrPerMt)} / MT
+                  </p>
+                </div>
+              </Link>
+              <div className="flex items-center pr-3">
+                <ConfirmDeleteButton
+                  label={`Delete booking for ${booking.buyerName}`}
+                  message={BOOKING_DELETE_MESSAGE}
+                  action={deleteBooking.bind(null, booking.id)}
+                />
               </div>
-            </Link>
+            </div>
           );
         })}
         {bookings.length === 0 ? (

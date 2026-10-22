@@ -1,9 +1,14 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { PageHeader } from "@/components/PageHeader";
 import { ShortagePair } from "@/components/WeightShortageAlert";
+import { deleteLot } from "@/lib/actions";
 import { formatMt } from "@/lib/format";
 import { getLotsWithStock } from "@/lib/queries";
 import { computeDeliveryShortage, computeWeightShortage } from "@/lib/weights";
+
+const LOT_DELETE_MESSAGE =
+  "Are you sure you want to permanently delete this import lot? This action cannot be undone.";
 
 export default async function LotsPage() {
   const lots = await getLotsWithStock();
@@ -37,34 +42,45 @@ export default async function LotsPage() {
             lot.deliveryQuantityMt,
           );
           return (
-            <Link
+            <div
               key={lot.id}
-              href={`/lots/${lot.id}`}
-              className="grid gap-2 border-t border-ink-100 px-5 py-4 hover:bg-paper-50 md:grid-cols-12 md:items-center"
+              className="flex items-stretch border-t border-ink-100"
             >
-              <div className="md:col-span-3">
-                <p className="font-semibold">{lot.lotNumber}</p>
-                <p className="text-sm text-ink-700/60">{lot.productName}</p>
-              </div>
-              <p className="text-sm md:col-span-2">{lot.supplierName || "—"}</p>
-              <p className="tabular text-sm md:col-span-2 md:text-right">
-                {formatMt(lot.stock.initialMt)}
-              </p>
-              <p className="tabular text-sm md:col-span-2 md:text-right">
-                {formatMt(lot.stock.committedMt)}
-              </p>
-              <p className="tabular text-sm md:col-span-1 md:text-right">
-                {formatMt(lot.stock.liftedMt)}
-              </p>
-              <p className="tabular text-sm font-semibold text-copper-600 md:col-span-2 md:text-right">
-                {formatMt(lot.stock.availableToSellMt)}
-              </p>
-              {cfsCheck?.hasShortage || deliveryCheck?.hasShortage ? (
-                <div className="md:col-span-12">
-                  <ShortagePair cfs={cfsCheck} delivery={deliveryCheck} compact />
+              <Link
+                href={`/lots/${lot.id}`}
+                className="grid min-w-0 flex-1 gap-2 px-5 py-4 hover:bg-paper-50 md:grid-cols-12 md:items-center"
+              >
+                <div className="md:col-span-3">
+                  <p className="font-semibold">{lot.lotNumber}</p>
+                  <p className="text-sm text-ink-700/60">{lot.productName}</p>
                 </div>
-              ) : null}
-            </Link>
+                <p className="text-sm md:col-span-2">{lot.supplierName || "—"}</p>
+                <p className="tabular text-sm md:col-span-2 md:text-right">
+                  {formatMt(lot.stock.initialMt)}
+                </p>
+                <p className="tabular text-sm md:col-span-2 md:text-right">
+                  {formatMt(lot.stock.committedMt)}
+                </p>
+                <p className="tabular text-sm md:col-span-1 md:text-right">
+                  {formatMt(lot.stock.liftedMt)}
+                </p>
+                <p className="tabular text-sm font-semibold text-copper-600 md:col-span-2 md:text-right">
+                  {formatMt(lot.stock.availableToSellMt)}
+                </p>
+                {cfsCheck?.hasShortage || deliveryCheck?.hasShortage ? (
+                  <div className="md:col-span-12">
+                    <ShortagePair cfs={cfsCheck} delivery={deliveryCheck} compact />
+                  </div>
+                ) : null}
+              </Link>
+              <div className="flex items-center pr-4">
+                <ConfirmDeleteButton
+                  label={`Delete lot ${lot.lotNumber}`}
+                  message={LOT_DELETE_MESSAGE}
+                  action={deleteLot.bind(null, lot.id)}
+                />
+              </div>
+            </div>
           );
         })}
         {lots.length === 0 ? (

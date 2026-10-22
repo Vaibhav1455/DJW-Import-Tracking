@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { LotForm } from "@/components/LotForm";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { LiftingBadge, PaymentBadge, PipelineBadge } from "@/components/StatusBadge";
 import { ShortagePair } from "@/components/WeightShortageAlert";
+import { deleteBooking, deleteLot } from "@/lib/actions";
 import { LOT_STAGE } from "@/lib/constants";
 import { formatInr, formatMt, invoiceAmount } from "@/lib/format";
 import { getLotWithStock } from "@/lib/queries";
@@ -40,8 +42,14 @@ export default async function LotDetailPage({
         actionHref="/bookings/new"
         actionLabel="Book sale"
       />
-      <div className="mb-6">
+      <div className="mb-6 flex items-center gap-3">
         <PipelineBadge status={lot.pipelineStatus} />
+        <ConfirmDeleteButton
+          label={`Delete lot ${lot.lotNumber}`}
+          message="Are you sure you want to permanently delete this import lot? This action cannot be undone."
+          action={deleteLot.bind(null, lot.id)}
+          redirectTo="/lots"
+        />
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -96,32 +104,43 @@ export default async function LotDetailPage({
             <p className="p-6 text-sm text-ink-700/60">No sales booked against this lot yet.</p>
           ) : (
             lot.bookings.map((booking) => (
-              <Link
+              <div
                 key={booking.id}
-                href={`/bookings/${booking.id}`}
-                className="flex flex-col gap-3 border-t border-ink-100 px-4 py-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
+                className="flex items-stretch border-t border-ink-100 first:border-t-0"
               >
-                <div>
-                  <p className="font-semibold">{booking.buyerName}</p>
-                  <p className="text-sm text-ink-700/65">
-                    {formatMt(booking.qtyBookedMt)} booked
-                    {booking.vehicleNumber ? ` · ${booking.vehicleNumber}` : ""}
-                  </p>
+                <Link
+                  href={`/bookings/${booking.id}`}
+                  className="flex min-w-0 flex-1 flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-semibold">{booking.buyerName}</p>
+                    <p className="text-sm text-ink-700/65">
+                      {formatMt(booking.qtyBookedMt)} booked
+                      {booking.vehicleNumber ? ` · ${booking.vehicleNumber}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <LiftingBadge status={booking.liftingStatus} />
+                    <PaymentBadge status={booking.paymentStatus} />
+                    <span className="tabular text-sm font-semibold">
+                      {formatInr(
+                        invoiceAmount(
+                          booking.agreedRateInrPerMt,
+                          booking.qtyBookedMt,
+                          booking.actualLoadedWeightMt,
+                        ),
+                      )}
+                    </span>
+                  </div>
+                </Link>
+                <div className="flex items-center pr-3">
+                  <ConfirmDeleteButton
+                    label={`Delete booking for ${booking.buyerName}`}
+                    message="Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell."
+                    action={deleteBooking.bind(null, booking.id)}
+                  />
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <LiftingBadge status={booking.liftingStatus} />
-                  <PaymentBadge status={booking.paymentStatus} />
-                  <span className="tabular text-sm font-semibold">
-                    {formatInr(
-                      invoiceAmount(
-                        booking.agreedRateInrPerMt,
-                        booking.qtyBookedMt,
-                        booking.actualLoadedWeightMt,
-                      ),
-                    )}
-                  </span>
-                </div>
-              </Link>
+              </div>
             ))
           )}
         </div>

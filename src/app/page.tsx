@@ -2,8 +2,12 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { LiftingBadge, PaymentBadge } from "@/components/StatusBadge";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
+import { PortStockBreakdown } from "@/components/PortStockBreakdown";
+import { deleteBooking, deleteLot } from "@/lib/actions";
 import { formatInr, formatMt, invoiceAmount } from "@/lib/format";
 import { getBookings, getLotsWithStock, getPipelineOrders } from "@/lib/queries";
+import { groupStockByPort } from "@/lib/stock";
 import { ShortagePair } from "@/components/WeightShortageAlert";
 import {
   computeDeliveryShortage,
@@ -25,6 +29,7 @@ export default async function DashboardPage() {
   const committed = lots.reduce((sum, lot) => sum + lot.stock.committedMt, 0);
   const lifted = lots.reduce((sum, lot) => sum + lot.stock.liftedMt, 0);
   const available = lots.reduce((sum, lot) => sum + lot.stock.availableToSellMt, 0);
+  const portGroups = groupStockByPort(lots);
   const invoiceBook = bookings.reduce(
     (sum, booking) =>
       sum +
@@ -52,6 +57,17 @@ export default async function DashboardPage() {
         <StatCard label="Pipeline" value={`${pipeline.length}`} hint={`${shortageLots.length} shortages`} />
         <StatCard label="Invoice book" value={formatInr(invoiceBook)} hint={`${formatMt(lifted, 1)} lifted`} />
       </div>
+
+      <section className="mt-10">
+        <div className="mb-4">
+          <h2 className="font-display text-xl">Stock by port</h2>
+          <p className="mt-1 text-sm text-ink-700/60">
+            Available-to-sell grouped by port or CFS. Tap a port for the
+            commodity split.
+          </p>
+        </div>
+        <PortStockBreakdown ports={portGroups} />
+      </section>
 
       {pipeline.length > 0 ? (
         <section className="mt-10">
@@ -113,48 +129,59 @@ export default async function DashboardPage() {
             <p className="px-4 py-8 text-sm text-ink-700/60">No lots yet. Create an import cargo lot to start.</p>
           ) : (
             lots.map((lot) => (
-              <Link
+              <div
                 key={lot.id}
-                href={`/lots/${lot.id}`}
-                className="grid gap-1 border-t border-ink-100 px-4 py-4 hover:bg-paper-50 md:grid-cols-12 md:items-center"
+                className="flex items-stretch border-t border-ink-100"
               >
-                <div className="md:col-span-3">
-                  <p className="font-semibold">{lot.lotNumber}</p>
-                  <p className="text-sm text-ink-700/65">{lot.productName}</p>
-                </div>
-                <p className="text-sm md:col-span-2">{lot.supplierName || "—"}</p>
-                <p className="tabular text-sm md:col-span-2 md:text-right">
-                  {formatMt(lot.stock.initialMt)}
-                </p>
-                <p className="tabular text-sm md:col-span-2 md:text-right">
-                  {formatMt(lot.stock.committedMt)}
-                </p>
-                <p className="tabular text-sm md:col-span-1 md:text-right">
-                  {formatMt(lot.stock.liftedMt)}
-                </p>
-                <p className="tabular text-sm font-semibold text-copper-600 md:col-span-2 md:text-right">
-                  {formatMt(lot.stock.availableToSellMt)}
-                </p>
-                {hasAnyShortage(
-                  lot.blWeightMt,
-                  lot.cfsActualWeightMt,
-                  lot.deliveryQuantityMt,
-                ) ? (
-                  <div className="md:col-span-12">
-                    <ShortagePair
-                      cfs={computeWeightShortage(
-                        lot.blWeightMt,
-                        lot.cfsActualWeightMt,
-                      )}
-                      delivery={computeDeliveryShortage(
-                        lot.blWeightMt,
-                        lot.deliveryQuantityMt,
-                      )}
-                      compact
-                    />
+                <Link
+                  href={`/lots/${lot.id}`}
+                  className="grid min-w-0 flex-1 gap-1 px-4 py-4 hover:bg-paper-50 md:grid-cols-12 md:items-center"
+                >
+                  <div className="md:col-span-3">
+                    <p className="font-semibold">{lot.lotNumber}</p>
+                    <p className="text-sm text-ink-700/65">{lot.productName}</p>
                   </div>
-                ) : null}
-              </Link>
+                  <p className="text-sm md:col-span-2">{lot.supplierName || "—"}</p>
+                  <p className="tabular text-sm md:col-span-2 md:text-right">
+                    {formatMt(lot.stock.initialMt)}
+                  </p>
+                  <p className="tabular text-sm md:col-span-2 md:text-right">
+                    {formatMt(lot.stock.committedMt)}
+                  </p>
+                  <p className="tabular text-sm md:col-span-1 md:text-right">
+                    {formatMt(lot.stock.liftedMt)}
+                  </p>
+                  <p className="tabular text-sm font-semibold text-copper-600 md:col-span-2 md:text-right">
+                    {formatMt(lot.stock.availableToSellMt)}
+                  </p>
+                  {hasAnyShortage(
+                    lot.blWeightMt,
+                    lot.cfsActualWeightMt,
+                    lot.deliveryQuantityMt,
+                  ) ? (
+                    <div className="md:col-span-12">
+                      <ShortagePair
+                        cfs={computeWeightShortage(
+                          lot.blWeightMt,
+                          lot.cfsActualWeightMt,
+                        )}
+                        delivery={computeDeliveryShortage(
+                          lot.blWeightMt,
+                          lot.deliveryQuantityMt,
+                        )}
+                        compact
+                      />
+                    </div>
+                  ) : null}
+                </Link>
+                <div className="flex items-center pr-3">
+                  <ConfirmDeleteButton
+                    label={`Delete lot ${lot.lotNumber}`}
+                    message="Are you sure you want to permanently delete this import lot? This action cannot be undone."
+                    action={deleteLot.bind(null, lot.id)}
+                  />
+                </div>
+              </div>
             ))
           )}
         </div>
@@ -169,33 +196,44 @@ export default async function DashboardPage() {
         </div>
         <div className="grid gap-3">
           {bookings.slice(0, 6).map((booking) => (
-            <Link
+            <div
               key={booking.id}
-              href={`/bookings/${booking.id}`}
-              className="rounded-2xl border border-ink-100 bg-white p-4 shadow-card"
+              className="flex items-stretch rounded-2xl border border-ink-100 bg-white shadow-card"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold">{booking.buyerName}</p>
-                  <p className="text-sm text-ink-700/65">
-                    {booking.lot.lotNumber} · {booking.lot.productName}
-                  </p>
+              <Link
+                href={`/bookings/${booking.id}`}
+                className="min-w-0 flex-1 p-4"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-semibold">{booking.buyerName}</p>
+                    <p className="text-sm text-ink-700/65">
+                      {booking.lot.lotNumber} · {booking.lot.productName}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <LiftingBadge status={booking.liftingStatus} />
+                    <PaymentBadge status={booking.paymentStatus} />
+                    <span className="tabular text-sm font-semibold">
+                      {formatInr(
+                        invoiceAmount(
+                          booking.agreedRateInrPerMt,
+                          booking.qtyBookedMt,
+                          booking.actualLoadedWeightMt,
+                        ),
+                      )}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <LiftingBadge status={booking.liftingStatus} />
-                  <PaymentBadge status={booking.paymentStatus} />
-                  <span className="tabular text-sm font-semibold">
-                    {formatInr(
-                      invoiceAmount(
-                        booking.agreedRateInrPerMt,
-                        booking.qtyBookedMt,
-                        booking.actualLoadedWeightMt,
-                      ),
-                    )}
-                  </span>
-                </div>
+              </Link>
+              <div className="flex items-center pr-3">
+                <ConfirmDeleteButton
+                  label={`Delete booking for ${booking.buyerName}`}
+                  message="Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell."
+                  action={deleteBooking.bind(null, booking.id)}
+                />
               </div>
-            </Link>
+            </div>
           ))}
           {bookings.length === 0 ? (
             <p className="text-sm text-ink-700/60">No sales bookings yet.</p>

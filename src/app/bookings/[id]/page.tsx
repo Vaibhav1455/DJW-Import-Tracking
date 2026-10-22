@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { BookingForm } from "@/components/BookingForm";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
+import { deleteBooking } from "@/lib/actions";
 import { formatInr, formatMt, invoiceAmount } from "@/lib/format";
 import { computeLotStockExcluding } from "@/lib/stock";
 import { getBooking, getLotsWithStock } from "@/lib/queries";
@@ -48,6 +50,15 @@ export default async function BookingDetailPage({
           }
         />
         <StatCard label="Final invoice amount" value={formatInr(invoice)} />
+      </div>
+
+      <div className="mb-6">
+        <ConfirmDeleteButton
+          label={`Delete booking for ${booking.buyerName}`}
+          message="Are you sure you want to delete this sale booking? This will restore the allocated stock back to Available-to-Sell."
+          action={deleteBooking.bind(null, booking.id)}
+          redirectTo="/bookings"
+        />
       </div>
 
       <BookingForm lots={lotsForForm} booking={booking} />

@@ -632,3 +632,31 @@ export async function updateBooking(formData: FormData) {
   revalidatePath(`/lots/${lotId}`);
   redirect(`/bookings/${id}`);
 }
+
+export async function deleteLot(id: string) {
+  const lot = await prisma.cargoLot.findUnique({ where: { id } });
+  if (!lot) {
+    throw new Error("Import lot not found.");
+  }
+
+  await prisma.$transaction([
+    prisma.salesBooking.deleteMany({ where: { lotId: id } }),
+    prisma.cargoLot.delete({ where: { id } }),
+  ]);
+
+  revalidateAll();
+}
+
+export async function deleteBooking(id: string) {
+  const booking = await prisma.salesBooking.findUnique({ where: { id } });
+  if (!booking) {
+    throw new Error("Sale booking not found.");
+  }
+
+  const lotId = booking.lotId;
+  await prisma.salesBooking.delete({ where: { id } });
+
+  revalidateAll();
+  revalidatePath(`/lots/${lotId}`);
+  revalidatePath(`/bookings/${id}`);
+}
