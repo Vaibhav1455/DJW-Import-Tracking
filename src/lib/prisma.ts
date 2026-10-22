@@ -1,10 +1,20 @@
 import { PrismaClient } from "@prisma/client";
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.VERCEL
-    ? "file:/tmp/djw-import.db"
-    : "file:./dev.db";
+function resolveDatabaseUrl() {
+  const postgresUrl = process.env.POSTGRES_PRISMA_URL;
+  const databaseUrl = process.env.DATABASE_URL;
+  if (postgresUrl) {
+    return postgresUrl;
+  }
+  if (databaseUrl && !databaseUrl.startsWith("file:")) {
+    return databaseUrl;
+  }
+  throw new Error(
+    "Set POSTGRES_PRISMA_URL or DATABASE_URL to a PostgreSQL connection string.",
+  );
 }
+
+process.env.DATABASE_URL = resolveDatabaseUrl();
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

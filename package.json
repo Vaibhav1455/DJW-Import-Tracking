@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/ensure-database-url.mjs && prisma generate && next build",
+    "build": "node scripts/ensure-database-url.mjs && prisma generate && node scripts/push-schema.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
